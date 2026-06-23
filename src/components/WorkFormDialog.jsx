@@ -7,9 +7,25 @@ import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
+import Tooltip from '@mui/material/Tooltip'
 import CloseIcon from '@mui/icons-material/Close'
+import TravelExploreIcon from '@mui/icons-material/TravelExplore'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { TimePicker } from '@mui/x-date-pickers/TimePicker'
+import dayjs from 'dayjs'
 import { STATUS_OPTIONS } from '../utils/statusUtils'
 import { todayStr } from '../utils/dateUtils'
+
+// สร้างลิงก์ Google Maps จากชื่อสถานที่ (รูปแบบ URL ค้นหาทางการ ไม่ต้องใช้ API key)
+function buildMapsUrl(place) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`
+}
+
+// แปลงระหว่าง string ที่เก็บใน form กับ dayjs object ที่ picker ใช้
+const toDateObj = (s) => (s ? dayjs(s) : null) // 'YYYY-MM-DD' -> dayjs
+const toTimeObj = (s) => (s ? dayjs(`2000-01-01T${s}`) : null) // 'HH:mm' -> dayjs
 
 const EMPTY_FORM = {
   title: '',
@@ -58,6 +74,22 @@ export default function WorkFormDialog({ open, mode = 'create', initialData, onC
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
+  // ใช้กับ DatePicker / TimePicker ที่ส่งค่ามาเป็น value ตรง ๆ (ไม่ใช่ event)
+  const setField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
+  }
+
+  // สร้างลิงก์ Google Map จากชื่อสถานที่ในช่อง "สถานที่" แล้วใส่ในช่องลิงก์ให้อัตโนมัติ
+  function handleGenerateMapUrl() {
+    const place = form.location.trim()
+    if (!place) {
+      setErrors((prev) => ({ ...prev, location: 'กรุณากรอกชื่อสถานที่ก่อนสร้างลิงก์' }))
+      return
+    }
+    setField('google_map_url', buildMapsUrl(place))
+  }
+
   function validate() {
     const next = {}
     if (!form.title.trim()) next.title = 'กรุณากรอกชื่องาน'
@@ -102,15 +134,20 @@ export default function WorkFormDialog({ open, mode = 'create', initialData, onC
               />
             </div>
 
-            <TextField
+            <DatePicker
               label="วันที่ *"
-              type="date"
-              value={form.work_date}
-              onChange={handleChange('work_date')}
-              error={!!errors.work_date}
-              helperText={errors.work_date}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
+              value={toDateObj(form.work_date)}
+              onChange={(v) =>
+                setField('work_date', v && v.isValid() ? v.format('YYYY-MM-DD') : '')
+              }
+              format="DD/MM/YYYY"
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!errors.work_date,
+                  helperText: errors.work_date,
+                },
+              }}
             />
 
             <TextField
@@ -127,26 +164,38 @@ export default function WorkFormDialog({ open, mode = 'create', initialData, onC
               ))}
             </TextField>
 
-            <TextField
+            <TimePicker
               label="เวลาเริ่ม *"
-              type="time"
-              value={form.start_time}
-              onChange={handleChange('start_time')}
-              error={!!errors.start_time}
-              helperText={errors.start_time}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
+              value={toTimeObj(form.start_time)}
+              onChange={(v) =>
+                setField('start_time', v && v.isValid() ? v.format('HH:mm') : '')
+              }
+              ampm={false}
+              format="HH:mm"
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!errors.start_time,
+                  helperText: errors.start_time,
+                },
+              }}
             />
 
-            <TextField
+            <TimePicker
               label="เวลาสิ้นสุด"
-              type="time"
-              value={form.end_time}
-              onChange={handleChange('end_time')}
-              error={!!errors.end_time}
-              helperText={errors.end_time}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
+              value={toTimeObj(form.end_time)}
+              onChange={(v) =>
+                setField('end_time', v && v.isValid() ? v.format('HH:mm') : '')
+              }
+              ampm={false}
+              format="HH:mm"
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!errors.end_time,
+                  helperText: errors.end_time,
+                },
+              }}
             />
 
             <div className="sm:col-span-2">
@@ -160,16 +209,45 @@ export default function WorkFormDialog({ open, mode = 'create', initialData, onC
               />
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 space-y-2">
               <TextField
                 label="ลิงก์ Google Map"
-                placeholder="https://maps.google.com/..."
+                placeholder="กรอกสถานที่ด้านบน แล้วกด 'สร้างลิงก์' หรือวาง URL เอง"
                 value={form.google_map_url}
                 onChange={handleChange('google_map_url')}
                 error={!!errors.google_map_url}
-                helperText={errors.google_map_url}
+                helperText={
+                  errors.google_map_url ||
+                  'สร้างอัตโนมัติจากชื่อสถานที่ หรือวางลิงก์ Google Map เองก็ได้'
+                }
                 fullWidth
+                InputProps={{
+                  endAdornment: form.google_map_url ? (
+                    <InputAdornment position="end">
+                      <Tooltip title="เปิดดูใน Google Map">
+                        <IconButton
+                          size="small"
+                          component="a"
+                          href={form.google_map_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <OpenInNewIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ) : null,
+                }}
               />
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<TravelExploreIcon />}
+                onClick={handleGenerateMapUrl}
+                disabled={!form.location.trim()}
+              >
+                สร้างลิงก์จากชื่อสถานที่
+              </Button>
             </div>
 
             <TextField

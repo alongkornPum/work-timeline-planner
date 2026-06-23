@@ -4,10 +4,16 @@ import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 import SearchIcon from '@mui/icons-material/Search'
 import ClearIcon from '@mui/icons-material/Clear'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import dayjs from 'dayjs'
 import { STATUS_OPTIONS } from '../utils/statusUtils'
+
+const toDateObj = (s) => (s ? dayjs(s) : null)
 
 export default function FilterBar({ filters, onChange, onClear }) {
   const update = (key) => (e) => onChange({ ...filters, [key]: e.target.value })
+  const updateDate = (key) => (v) =>
+    onChange({ ...filters, [key]: v && v.isValid() ? v.format('YYYY-MM-DD') : '' })
 
   const hasActiveFilter =
     filters.search ||
@@ -53,23 +59,25 @@ export default function FilterBar({ filters, onChange, onClear }) {
         </TextField>
 
         {/* ช่วงวันที่ */}
-        <TextField
+        <DatePicker
           label="ตั้งแต่วันที่"
-          type="date"
-          value={filters.dateFrom}
-          onChange={update('dateFrom')}
-          size="small"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
+          value={toDateObj(filters.dateFrom)}
+          onChange={updateDate('dateFrom')}
+          format="DD/MM/YYYY"
+          slotProps={{
+            textField: { size: 'small', fullWidth: true },
+            field: { clearable: true },
+          }}
         />
-        <TextField
+        <DatePicker
           label="ถึงวันที่"
-          type="date"
-          value={filters.dateTo}
-          onChange={update('dateTo')}
-          size="small"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
+          value={toDateObj(filters.dateTo)}
+          onChange={updateDate('dateTo')}
+          format="DD/MM/YYYY"
+          slotProps={{
+            textField: { size: 'small', fullWidth: true },
+            field: { clearable: true },
+          }}
         />
       </div>
 

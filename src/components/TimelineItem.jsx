@@ -28,7 +28,7 @@ export default function TimelineItem({ work, showOwner = false, onView, onEdit, 
   const isCompleted = work.status === 'completed'
 
   return (
-    <div className="relative pl-10 pb-6">
+    <div className="relative pl-9 pb-2.5">
       {/* เส้นแนวตั้ง */}
       <span
         className="absolute top-1 bottom-0 w-px bg-slate-200"
@@ -38,7 +38,7 @@ export default function TimelineItem({ work, showOwner = false, onView, onEdit, 
       {/* จุด dot */}
       <span
         className="absolute rounded-full border-2 border-white shadow"
-        style={{ left: 4, top: 6, width: 16, height: 16, backgroundColor: dotColor }}
+        style={{ left: 6, top: 9, width: 12, height: 12, backgroundColor: dotColor }}
         aria-hidden
       />
 
@@ -53,94 +53,96 @@ export default function TimelineItem({ work, showOwner = false, onView, onEdit, 
           '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
         }}
       >
-        <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-          {/* แถวหัว: ชื่อ + badge + สถานะ */}
-          <div className="flex items-start justify-between gap-2">
+        <CardContent sx={{ py: 0.75, px: 1.5, '&:last-child': { pb: 0.75 } }}>
+          <div className="flex items-center gap-2">
+            {/* ฝั่งซ้าย: ชื่อ + ข้อมูลย่อบรรทัดเดียว */}
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              {/* แถวชื่อ + badge */}
+              <div className="flex items-center gap-1 min-w-0">
                 {today && (
-                  <Chip label="วันนี้" size="small" color="secondary" sx={{ height: 22 }} />
+                  <Chip label="วันนี้" size="small" color="secondary" sx={{ height: 18, fontSize: 11, flexShrink: 0, '& .MuiChip-label': { px: 0.75 } }} />
                 )}
                 {soon && (
                   <Chip
                     label="ใกล้ถึงแล้ว"
                     size="small"
-                    sx={{ height: 22, bgcolor: '#fff3e0', color: '#e65100', fontWeight: 600 }}
+                    sx={{ height: 18, fontSize: 11, flexShrink: 0, bgcolor: '#fff3e0', color: '#e65100', fontWeight: 600, '& .MuiChip-label': { px: 0.75 } }}
                   />
                 )}
-              </div>
-              <h3
-                className={`text-base font-semibold break-words ${
-                  isCancelled ? 'line-through text-slate-500' : 'text-slate-800'
-                }`}
-              >
-                {work.title}
-              </h3>
-            </div>
-            <Chip label={status.label} color={status.color} size="small" />
-          </div>
-
-          {/* แสดงเจ้าของงาน (เฉพาะ admin ที่ดูรวมทุกคน) */}
-          {showOwner && work.owner?.email && (
-            <Chip
-              icon={<AccountCircleIcon />}
-              label={work.owner.email}
-              size="small"
-              variant="outlined"
-              sx={{ mt: 1, maxWidth: '100%' }}
-            />
-          )}
-
-          {/* รายละเอียดย่อ */}
-          <div className="mt-2 space-y-1 text-sm text-slate-600">
-            <div className="flex items-center gap-1.5">
-              <AccessTimeIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
-              <span>{formatTimeRange(work.start_time, work.end_time)}</span>
-              <span className="text-xs text-slate-400">· {getRelativeLabel(work.work_date, work.start_time)}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <PlaceIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
-              <span className="truncate">{work.location}</span>
-            </div>
-            {work.responsible_person && (
-              <div className="flex items-center gap-1.5">
-                <PersonIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
-                <span className="truncate">{work.responsible_person}</span>
-              </div>
-            )}
-          </div>
-
-          {/* ปุ่มจัดการ */}
-          <div className="mt-3 flex items-center justify-end gap-1">
-            {work.google_map_url && (
-              <Tooltip title="เปิด Google Map">
-                <IconButton
-                  size="small"
-                  component="a"
-                  href={work.google_map_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  color="primary"
+                <h3
+                  className={`text-[13px] font-semibold truncate ${
+                    isCancelled ? 'line-through text-slate-500' : 'text-slate-800'
+                  }`}
                 >
-                  <MapIcon fontSize="small" />
+                  {work.title}
+                </h3>
+              </div>
+
+              {/* ข้อมูลย่อ: เวลา · สถานที่ · ผู้รับผิดชอบ (บรรทัดเดียว) */}
+              <div className="flex items-center gap-x-2.5 mt-0.5 text-[12px] text-slate-500 min-w-0 overflow-hidden">
+                <span className="flex items-center gap-0.5 flex-shrink-0">
+                  <AccessTimeIcon sx={{ fontSize: 13, color: '#94a3b8' }} />
+                  {formatTimeRange(work.start_time, work.end_time)}
+                  <span className="text-slate-400">· {getRelativeLabel(work.work_date, work.start_time)}</span>
+                </span>
+                <span className="flex items-center gap-0.5 min-w-0">
+                  <PlaceIcon sx={{ fontSize: 13, color: '#94a3b8', flexShrink: 0 }} />
+                  <span className="truncate">{work.location}</span>
+                </span>
+                {work.responsible_person && (
+                  <span className="hidden sm:flex items-center gap-0.5 min-w-0">
+                    <PersonIcon sx={{ fontSize: 13, color: '#94a3b8', flexShrink: 0 }} />
+                    <span className="truncate">{work.responsible_person}</span>
+                  </span>
+                )}
+                {showOwner && work.owner?.email && (
+                  <span className="hidden md:flex items-center gap-0.5 min-w-0 text-indigo-500">
+                    <AccountCircleIcon sx={{ fontSize: 13, flexShrink: 0 }} />
+                    <span className="truncate">{work.owner.email}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* ฝั่งขวา: สถานะ + ปุ่มจัดการ */}
+            <div className="flex items-center flex-shrink-0">
+              <Chip
+                label={status.label}
+                color={status.color}
+                size="small"
+                sx={{ mr: 0.5, height: 20, fontSize: 11, '& .MuiChip-label': { px: 1 } }}
+              />
+              {work.google_map_url && (
+                <Tooltip title="เปิด Google Map">
+                  <IconButton
+                    size="small"
+                    sx={{ p: 0.5 }}
+                    component="a"
+                    href={work.google_map_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    color="primary"
+                  >
+                    <MapIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+              <Tooltip title="ดูรายละเอียด">
+                <IconButton size="small" sx={{ p: 0.5 }} onClick={() => onView(work)}>
+                  <VisibilityIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
-            )}
-            <Tooltip title="ดูรายละเอียด">
-              <IconButton size="small" onClick={() => onView(work)}>
-                <VisibilityIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="แก้ไข">
-              <IconButton size="small" onClick={() => onEdit(work)}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="ลบ">
-              <IconButton size="small" color="error" onClick={() => onDelete(work)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+              <Tooltip title="แก้ไข">
+                <IconButton size="small" sx={{ p: 0.5 }} onClick={() => onEdit(work)}>
+                  <EditIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="ลบ">
+                <IconButton size="small" sx={{ p: 0.5 }} color="error" onClick={() => onDelete(work)}>
+                  <DeleteIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            </div>
           </div>
         </CardContent>
       </Card>
