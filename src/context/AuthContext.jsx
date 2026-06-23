@@ -55,8 +55,14 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }, [])
 
-  const signUp = useCallback(async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  const signUp = useCallback(async (email, password, meta = {}) => {
+    // meta เช่น { full_name, department } จะถูกเก็บใน user metadata
+    // แล้ว trigger handle_new_user จะนำไปบันทึกในตาราง profiles
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: meta },
+    })
     if (error) throw error
     return data
   }, [])

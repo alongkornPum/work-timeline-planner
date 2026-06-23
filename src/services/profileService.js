@@ -10,7 +10,7 @@ export async function getMyProfile(userId) {
   if (!userId) return null
   const { data, error } = await supabase
     .from(TABLE)
-    .select('id, email, role')
+    .select('id, email, full_name, department, role')
     .eq('id', userId)
     .maybeSingle()
 
@@ -25,7 +25,7 @@ export async function getMyProfile(userId) {
 export async function getAllProfiles() {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('id, email, role')
+    .select('id, email, full_name, department, role')
     .order('email', { ascending: true })
 
   if (error) throw error

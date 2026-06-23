@@ -13,11 +13,18 @@
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
   email TEXT,
+  full_name TEXT,    -- ชื่อ-นามสกุล
+  department TEXT,   -- หน่วยงาน/ตำแหน่ง
   role TEXT NOT NULL DEFAULT 'user', -- 'user' | 'admin'
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- เผื่อตาราง profiles ถูกสร้างไว้ก่อนแล้ว ให้เพิ่มคอลัมน์ที่ขาด
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS department TEXT;
+
 -- สร้าง profile อัตโนมัติเมื่อมีผู้สมัครใหม่ใน auth.users
+-- อ่านชื่อ-นามสกุล/หน่วยงาน จาก metadata ที่ส่งมาตอน signUp
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -25,8 +32,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email)
-  VALUES (NEW.id, NEW.email)
+  INSERT INTO public.profiles (id, email, full_name, department)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data ->> 'full_name',
+    NEW.raw_user_meta_data ->> 'department'
+  )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

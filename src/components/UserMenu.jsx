@@ -10,12 +10,14 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import { useAuth } from '../context/AuthContext'
 
 export default function UserMenu({ onSignOut }) {
-  const { user, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
 
   const email = user?.email ?? ''
-  const initial = email ? email[0].toUpperCase() : '?'
+  const fullName = profile?.full_name ?? ''
+  const department = profile?.department ?? ''
+  const initial = (fullName || email || '?')[0].toUpperCase()
 
   async function handleSignOut() {
     setAnchorEl(null)
@@ -45,7 +47,17 @@ export default function UserMenu({ onSignOut }) {
           <Typography variant="caption" color="text.secondary">
             เข้าสู่ระบบในชื่อ
           </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: 'break-all' }}>
+          {fullName && (
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {fullName}
+            </Typography>
+          )}
+          {department && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              {department}
+            </Typography>
+          )}
+          <Typography variant="caption" sx={{ wordBreak: 'break-all', color: '#64748b' }}>
             {email}
           </Typography>
         </div>

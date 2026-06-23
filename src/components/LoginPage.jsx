@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [department, setDepartment] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -26,6 +28,10 @@ export default function LoginPage() {
     setError('')
     setInfo('')
 
+    if (mode === 'signup' && !fullName.trim()) {
+      setError('กรุณากรอกชื่อ-นามสกุล')
+      return
+    }
     if (!email.trim() || !password) {
       setError('กรุณากรอกอีเมลและรหัสผ่าน')
       return
@@ -38,7 +44,10 @@ export default function LoginPage() {
     setLoading(true)
     try {
       if (mode === 'signup') {
-        const data = await signUp(email.trim(), password)
+        const data = await signUp(email.trim(), password, {
+          full_name: fullName.trim(),
+          department: department.trim(),
+        })
         // ถ้าโปรเจกต์เปิด "Confirm email" จะยังไม่มี session ทันที
         if (!data.session) {
           setInfo('สมัครสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี ก่อนเข้าสู่ระบบ')
@@ -61,9 +70,10 @@ export default function LoginPage() {
       <Card elevation={0} sx={{ width: '100%', maxWidth: 400, border: '1px solid #e5e7eb' }}>
         <CardContent sx={{ p: 4 }}>
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-3">
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-2">
               <TimelineIcon fontSize="large" />
             </div>
+            <span className="text-xs text-slate-400 mb-1">v{__APP_VERSION__}</span>
             <h1 className="text-xl font-bold text-slate-800">Work Timeline Planner</h1>
             <p className="text-sm text-slate-500 mt-1">
               {mode === 'signin' ? 'เข้าสู่ระบบเพื่อจัดการงานของคุณ' : 'สร้างบัญชีใหม่'}
@@ -82,6 +92,25 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'signup' && (
+              <>
+                <TextField
+                  label="ชื่อ-นามสกุล"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  fullWidth
+                  autoComplete="name"
+                  autoFocus
+                />
+                <TextField
+                  label="หน่วยงาน / ตำแหน่ง"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  fullWidth
+                  placeholder="เช่น ฝ่ายไอที / นักวิชาการคอมพิวเตอร์"
+                />
+              </>
+            )}
             <TextField
               label="อีเมล"
               type="email"
@@ -89,7 +118,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               fullWidth
               autoComplete="email"
-              autoFocus
+              autoFocus={mode === 'signin'}
             />
             <TextField
               label="รหัสผ่าน"

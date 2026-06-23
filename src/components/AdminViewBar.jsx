@@ -34,7 +34,8 @@ export default function AdminViewBar({ value, onChange, profiles, currentUserId 
           )}
           {profiles.map((p) => (
             <MenuItem key={p.id} value={p.id}>
-              {p.email || p.id.slice(0, 8)}
+              {p.full_name || p.email || p.id.slice(0, 8)}
+              {p.department ? ` · ${p.department}` : ''}
               {p.id === currentUserId ? ' (ฉัน)' : ''}
               {p.role === 'admin' ? ' · admin' : ''}
             </MenuItem>
