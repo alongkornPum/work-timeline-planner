@@ -34,13 +34,19 @@ const SELECT_WITH_OWNER = '*, owner:profiles(id, email, role)'
  * ดึงรายการงาน เรียงจากงานที่ใกล้ถึงที่สุด -> ไกลที่สุด
  * - ผู้ใช้ทั่วไป: RLS จะคืนเฉพาะงานของตัวเองอยู่แล้ว
  * - admin: คืนทุกงาน หรือถ้าส่ง userId มาจะกรองเฉพาะของคนนั้น
- * @param {{ userId?: string }} [options]
+ * - ค่าเริ่มต้นจะ "ไม่รวม" งานที่ถูกลบแบบ soft delete (deleted_at มีค่า)
+ *   ส่ง { trashed: true } เพื่อดูเฉพาะงานในถังขยะ
+ * @param {{ userId?: string, trashed?: boolean }} [options]
  */
 export async function getWorkTimeline(options = {}) {
-  const { userId } = options
+  const { userId, trashed = false } = options
   let query = supabase.from(TABLE).select(SELECT_WITH_OWNER)
 
   if (userId) query = query.eq('user_id', userId)
+
+  // soft delete: กรองตามสถานะการลบ
+  if (trashed) query = query.not('deleted_at', 'is', null)
+  else query = query.is('deleted_at', null)
 
   query = query
     .order('work_date', { ascending: true })
@@ -86,10 +92,39 @@ export async function updateWorkTimeline(id, payload) {
 }
 
 /**
- * ลบงานตาม id
+ * ลบงานแบบ soft delete (ใส่เวลาใน deleted_at ไม่ได้ลบแถวจริง)
+ * ข้อมูลยังอยู่ใน DB และกู้คืนได้ด้วย restoreWorkTimeline
  * @param {string} id UUID ของงาน
  */
 export async function deleteWorkTimeline(id) {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+  return true
+}
+
+/**
+ * กู้คืนงานที่ถูก soft delete (เคลียร์ deleted_at)
+ * @param {string} id UUID ของงาน
+ */
+export async function restoreWorkTimeline(id) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({ deleted_at: null })
+    .eq('id', id)
+    .select(SELECT_WITH_OWNER)
+    .single()
+  if (error) throw error
+  return data
+}
+
+/**
+ * ลบถาวรจริง ๆ (hard delete) — ลบแถวออกจาก DB เลย กู้คืนไม่ได้
+ * @param {string} id UUID ของงาน
+ */
+export async function hardDeleteWorkTimeline(id) {
   const { error } = await supabase.from(TABLE).delete().eq('id', id)
   if (error) throw error
   return true

@@ -19,11 +19,11 @@ export default function Timeline({ works, showOwner = false, onView, onEdit, onD
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {groups.map((group) => (
         <section key={group.key}>
           {/* หัวกลุ่มวันที่ (sticky) */}
-          <div className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-[#f4f6f8]/90 backdrop-blur">
+          <div className="sticky top-0 z-10 -mx-1 px-1 py-0.5 bg-[#f4f6f8]/90 backdrop-blur">
             <div className="inline-flex items-center gap-2">
               <span className="text-sm font-semibold text-slate-700">
                 {formatThaiDate(group.date)}
@@ -39,7 +39,7 @@ export default function Timeline({ works, showOwner = false, onView, onEdit, onD
             </div>
           </div>
 
-          <div className="mt-2">
+          <div className="mt-1">
             {group.items.map((work) => (
               <TimelineItem
                 key={work.id}

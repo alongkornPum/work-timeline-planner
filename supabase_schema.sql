@@ -74,12 +74,15 @@ CREATE TABLE IF NOT EXISTS work_timeline (
   responsible_person TEXT,
   status TEXT DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  updated_at TIMESTAMP DEFAULT NOW(),
+  deleted_at TIMESTAMP DEFAULT NULL -- soft delete: NULL = ยังอยู่, มีค่า = ถูกลบแล้ว
 );
 
--- เผื่อกรณีตารางถูกสร้างไว้ก่อนแล้ว (ยังไม่มี user_id) ให้เพิ่มคอลัมน์
+-- เผื่อกรณีตารางถูกสร้างไว้ก่อนแล้ว ให้เพิ่มคอลัมน์ที่ขาด
 ALTER TABLE work_timeline
   ADD COLUMN IF NOT EXISTS user_id UUID DEFAULT auth.uid() REFERENCES profiles (id) ON DELETE CASCADE;
+ALTER TABLE work_timeline
+  ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
 
 -- Index ช่วยการเรียง/กรอง
 CREATE INDEX IF NOT EXISTS idx_work_timeline_date_time
@@ -88,6 +91,9 @@ CREATE INDEX IF NOT EXISTS idx_work_timeline_status
   ON work_timeline (status);
 CREATE INDEX IF NOT EXISTS idx_work_timeline_user
   ON work_timeline (user_id);
+-- index เฉพาะแถวที่ยังไม่ถูกลบ (ช่วยให้ query รายการปกติเร็วขึ้น)
+CREATE INDEX IF NOT EXISTS idx_work_timeline_not_deleted
+  ON work_timeline (deleted_at) WHERE deleted_at IS NULL;
 
 -- Trigger อัปเดต updated_at อัตโนมัติ
 CREATE OR REPLACE FUNCTION set_updated_at()
